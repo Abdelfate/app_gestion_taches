@@ -2,6 +2,7 @@
 
 use Laravel\Sanctum\Sanctum;
 
+
 return [
 
     /*

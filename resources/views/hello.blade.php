@@ -7,6 +7,6 @@
 </head>
 <body>
     <h1> Salam {{$nom}}</h1>
-                                                                            ék                                     
+                                      
 </body>
 </html>
