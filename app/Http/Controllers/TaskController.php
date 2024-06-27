@@ -2,94 +2,69 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Task;
 use Illuminate\Http\Request;
+use App\Models\Task;
 use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
-    // Créer une nouvelle tâche
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-        ]);
-
-        $task = Task::create([
-            'title' => $request->title,
-            'description' => $request->description,
-            'user_id' => auth()->id(),
-        ]);
-
-        return response()->json($task, 201);
-    }
-
-    // Récupérer toutes les tâches
     public function index()
     {
-        if (Auth::user()->role === 'admin') {
-            $tasks = Task::withTrashed()->get();
-        } else {
-            $tasks = Task::where('user_id', Auth::id())->get();
-        }
+        // Récupérer toutes les tâches non supprimées pour les utilisateurs, et toutes les tâches pour les administrateurs
+        $tasks = Auth::user()->role === 'admin' ? Task::withTrashed()->get() : Task::where('user_id', Auth::id())->get();
         return response()->json($tasks);
     }
 
-    // Récupérer une tâche spécifique
+    public function store(Request $request)
+    {
+        $task = Task::create([
+            'title' => $request->title,
+            'description' => $request->description,
+            'status' => $request->status,
+            'due_date' => $request->due_date,
+            'user_id' => Auth::id(),
+        ]);
+        return response()->json($task, 201);
+    }
+
     public function show($id)
     {
         $task = Task::withTrashed()->findOrFail($id);
-
         if (Auth::user()->role !== 'admin' && $task->user_id !== Auth::id()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
-
         return response()->json($task);
     }
 
-    // Mettre à jour une tâche
     public function update(Request $request, $id)
     {
         $task = Task::withTrashed()->findOrFail($id);
-
         if (Auth::user()->role !== 'admin' && $task->user_id !== Auth::id()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-        ]);
-
-        $task->update($request->only('title', 'description'));
-
+        $task->update($request->all());
         return response()->json($task);
     }
 
-    // Soft delete d'une tâche
     public function destroy($id)
     {
-        $task = Task::findOrFail($id);
-
+        $task = Task::withTrashed()->findOrFail($id);
         if (Auth::user()->role !== 'admin' && $task->user_id !== Auth::id()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
         $task->delete();
-
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Task deleted successfully']);
     }
 
-    // Récupérer les tâches supprimées (uniquement pour les administrateurs)
     public function deletedTasks()
     {
         if (Auth::user()->role !== 'admin') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $tasks = Task::onlyTrashed()->get();
-        return response()->json($tasks);
+        $deletedTasks = Task::onlyTrashed()->get();
+        return response()->json($deletedTasks);
     }
 }
-
