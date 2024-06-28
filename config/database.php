@@ -68,7 +68,7 @@ return [
             'url' => env('DATABASE_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'task_manager'),
+            'database' => env('DB_DATABASE', 'app_restful'),
             'username' => env('DB_USERNAME', 'laravel'),
             'password' => env('DB_PASSWORD', 'laravel'),
             'charset' => 'utf8',
